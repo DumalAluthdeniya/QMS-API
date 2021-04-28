@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Data\Migrations\20210426065227_AddTablesRelatedToQuestionsCRUD.cs" />
+    <Compile Remove="Data\Migrations\20210426065227_AddTablesRelatedToQuestionsCRUD.Designer.cs" />
+    <Compile Remove="Data\Migrations\20210426065345_AddTablesRelatedToQuestionsCRUD.cs" />
+    <Compile Remove="Data\Migrations\20210426065345_AddTablesRelatedToQuestionsCRUD.Designer.cs" />
+    <Compile Remove="Data\Migrations\20210426080803_updateDeleteContraintofAnswertable.cs" />
+    <Compile Remove="Data\Migrations\20210426080803_updateDeleteContraintofAnswertable.Designer.cs" />
+    <Compile Remove="Data\Migrations\20210426082323_test.cs" />
+    <Compile Remove="Data\Migrations\20210426082323_test.Designer.cs" />
+    <Compile Remove="Data\Migrations\20210427171443_FixTestLinkKey.cs" />
+    <Compile Remove="Data\Migrations\20210427171443_FixTestLinkKey.Designer.cs" />
+    <Compile Remove="Data\Migrations\20210428092008_AddQuizAnswerTables.cs" />
+    <Compile Remove="Data\Migrations\20210428092008_AddQuizAnswerTables.Designer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="3.1.14" />
+    <PackageReference Include="Microsoft.AspNetCore.ApiAuthorization.IdentityServer" Version="3.1.14" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="3.1.14" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="3.1.14" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="3.1.14" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="3.1.14" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.14" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="3.1.14" />
+  </ItemGroup>
+
+
+</Project>
