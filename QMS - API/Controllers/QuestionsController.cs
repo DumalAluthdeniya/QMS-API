@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using QMS_API.Data;
@@ -226,8 +225,19 @@ namespace QMS_API.Controllers
                 Console.WriteLine(e);
                 return BadRequest("Something went wrong.");
             }
+        }
 
-
+        [HttpGet("types")]
+        public async Task<IActionResult> GetQuestionTypes()
+        {
+            var types = await _context.QuestionTypes.ToListAsync();
+            return Ok(types);
+        }
+        [HttpGet("difficultyLevels")]
+        public async Task<IActionResult> GetQuestionDifficultyLevels()
+        {
+            var types = await _context.QuestionDifficulties.ToListAsync();
+            return Ok(types);
         }
     }
 }

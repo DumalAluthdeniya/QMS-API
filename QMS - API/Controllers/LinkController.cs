@@ -37,6 +37,8 @@ namespace QMS_API.Controllers
                 .ThenInclude(tq => tq.Question)
                 .ThenInclude(q => q.Answers)
                 .Include(l => l.CreatedBy)
+                .Include(l => l.QuizAttempts)
+                .ThenInclude(qa => qa.QuizAnswers)
                 .ToListAsync();
 
 
@@ -75,6 +77,46 @@ namespace QMS_API.Controllers
                     questionResources.Add(questionResource);
                 });
 
+                var quizAttempts = new List<QuizAttemptResource>();
+
+                link.QuizAttempts.ForEach(qa =>
+                {
+                    var quizAnswers = new List<QuizAnswerResource>();
+
+                    qa.QuizAnswers.ForEach(qan =>
+                    {
+                        var quizAnswer = new QuizAnswerResource()
+                        {
+                            Id = qan.Id,
+                            QuestionId = qan.Question.Id,
+                            Answer = qan.Answer,
+                            QuizAttemptId = qan.QuizAttempt.Id,
+                            TestId = qan.Id,
+                            IsAnswerCorrect = qan.IsAnswerCorrect,
+                            MatchingText = qan.MatchingText
+                        };
+
+                        quizAnswers.Add(quizAnswer);
+                    });
+
+
+                    var quizAttempt = new QuizAttemptResource()
+                    {
+                        Id = qa.Id,
+                        Email = qa.Email,
+                        Enrollment = qa.Enrollment,
+                        Name = qa.Name,
+                        Score = qa.Score,
+                        Duration = qa.Duration,
+                        Percentage = qa.Percentage,
+                        QuizAnswers = quizAnswers
+                    };
+
+                    quizAttempts.Add(quizAttempt);
+                });
+
+               
+
                 var linkResource = new LinkResource()
                 {
                     Id = link.Id,
@@ -89,7 +131,10 @@ namespace QMS_API.Controllers
                         Introduction = link.Test.Introduction,
                         QuestionsList = questionResources
                     },
-                    User = link.CreatedBy.UserName
+                    User = link.CreatedBy.UserName,
+                    QuizAttempts = quizAttempts
+                    
+                    
                 };
 
                 linkResources.Add(linkResource);
@@ -165,6 +210,22 @@ namespace QMS_API.Controllers
                         };
                         answerResources.Add(answerResource);
                     }
+                    else if (q.QuestionType == Enums.Enums.QuestionTypes.FreeText)
+                    {
+                        if (givenAnswersForCurrentQuestion != null)
+                        {
+                            var answerResource = new AnswerResource()
+                            {
+                                Id = a.Id,
+                                IsCorrectAnswer = a.IsCorrectAnswer,
+                                Name = a.Name,
+                                MatchingText = a.MatchingText,
+                                GivenMatchingText = givenAnswersForCurrentQuestion.Find(qa => q.Id == a.Question.Id)?.MatchingText
+
+                            };
+                            answerResources.Add(answerResource);
+                        }
+                    }
                     else
                     {
                        
@@ -196,6 +257,48 @@ namespace QMS_API.Controllers
                 questionResources.Add(questionResource);
             }
 
+            var quizAttempts = new List<QuizAttemptResource>();
+
+            link.QuizAttempts.ForEach(qa =>
+            {
+                var quizAnswers = new List<QuizAnswerResource>();
+
+                qa.QuizAnswers.ForEach(qan =>
+                {
+                    var quizAnswer = new QuizAnswerResource()
+                    {
+                        Id = qan.Id,
+                        QuestionId = qan.Question.Id,
+                        Answer = qan.Answer,
+                        QuizAttemptId = qan.QuizAttempt.Id,
+                        TestId = qan.Id,
+                        IsAnswerCorrect = qan.IsAnswerCorrect,
+                        MatchingText = qan.MatchingText
+                    };
+
+                    quizAnswers.Add(quizAnswer);
+                });
+
+
+                var quizAttempt = new QuizAttemptResource()
+                {
+                    Id = qa.Id,
+                    Email = qa.Email,
+                    Enrollment = qa.Enrollment,
+                    Name = qa.Name,
+                    Score = qa.Score,
+                    Duration = qa.Duration,
+                    Percentage = qa.Percentage,
+                    QuizAnswers = quizAnswers,
+                    StartDate = qa.StartDate,
+                    FinishDate = qa.FinishDate,
+                    CorrectQuestions = qa.CorrectQuestions
+
+                };
+
+                quizAttempts.Add(quizAttempt);
+            });
+
             var linkResource = new LinkResource()
             {
                 Id = link.Id,
@@ -211,7 +314,8 @@ namespace QMS_API.Controllers
                     Introduction = link.Test.Introduction,
                     QuestionsList = questionResources
                 },
-                User = link.CreatedBy.UserName
+                User = link.CreatedBy.UserName,
+                QuizAttempts = quizAttempts
             };
 
             return Ok(linkResource);
@@ -229,7 +333,11 @@ namespace QMS_API.Controllers
                 .ThenInclude(tq => tq.Question)
                 .ThenInclude(q => q.Answers)
                 .Include(l => l.CreatedBy)
+                .Include(l => l.QuizAttempts)
+                .ThenInclude(qa => qa.QuizAnswers)
                 .FirstOrDefaultAsync(l => l.Id == id);
+
+
 
             if (link == null)
                 return NotFound("Could not found an Link with this ID");
@@ -265,6 +373,50 @@ namespace QMS_API.Controllers
                 questionResources.Add(questionResource);
             });
 
+            var quizAttempts = new List<QuizAttemptResource>();
+
+            link.QuizAttempts.ForEach(qa =>
+            {
+                var quizAnswers = new List<QuizAnswerResource>();
+
+                qa.QuizAnswers.ForEach(qan =>
+                {
+                    var quizAnswer = new QuizAnswerResource()
+                    {
+                        Id = qan.Id,
+                        QuestionId = qan.Question.Id,
+                        Answer = qan.Answer,
+                        QuizAttemptId = qan.QuizAttempt.Id,
+                        TestId = qan.Id,
+                        IsAnswerCorrect = qan.IsAnswerCorrect,
+                        MatchingText = qan.MatchingText
+                    };
+
+                    quizAnswers.Add(quizAnswer);
+                });
+
+
+                var quizAttempt = new QuizAttemptResource()
+                {
+                    Id = qa.Id,
+                    Email = qa.Email,
+                    Enrollment = qa.Enrollment,
+                    Name = qa.Name,
+                    Score = qa.Score,
+                    Duration = qa.Duration,
+                    Percentage = qa.Percentage,
+                    QuizAnswers = quizAnswers,
+                    StartDate = qa.StartDate,
+                    FinishDate = qa.FinishDate,
+                    CorrectQuestions = qa.CorrectQuestions
+
+                };
+
+                quizAttempts.Add(quizAttempt);
+            });
+
+
+
             var linkResource = new LinkResource()
             {
                 Id = link.Id,
@@ -280,7 +432,9 @@ namespace QMS_API.Controllers
                     Introduction = link.Test.Introduction,
                     QuestionsList = questionResources
                 },
-                User = link.CreatedBy.UserName
+                User = link.CreatedBy.UserName,
+                QuizAttempts = quizAttempts,
+                
             };
 
             return Ok(linkResource);

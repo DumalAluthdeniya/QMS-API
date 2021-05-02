@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using static QMS_API.Enums.Enums;
 
 namespace QMS_API.Models
 {
@@ -13,13 +14,14 @@ namespace QMS_API.Models
         [Required]
         public string Title { get; set; }
         [Required]
-        public int QuestionType { get; set; }
+        public QuestionTypes QuestionType { get; set; }
         [Required]
-        public int DifficultyLevel { get; set; }
+        public DifficultyLevels DifficultyLevel { get; set; }
         public bool RandomizeAnswers { get; set; }
         public int AnswerMaxLength { get; set; } 
         public bool IsDeleted { get; set; }
         public int Points { get; set; }
+        
         public DateTime CreatedTime { get; set; }
         public virtual List<Answer> Answers { get; set; }
         public virtual IEnumerable<TestQuestion> TestQuestions { get; set; }
@@ -28,8 +30,8 @@ namespace QMS_API.Models
         public Question()
         {
             CreatedTime = DateTime.Now;
-            DifficultyLevel = 1;
-            QuestionType = 1;
+            DifficultyLevel = DifficultyLevels.Easy;
+            QuestionType = QuestionTypes.MultipleChoice;
             AnswerMaxLength = 1000;
             IsDeleted = false;
             Points = 0;

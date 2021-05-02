@@ -3,14 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using QMS_API.Data;
 
-namespace QMS__API.Data.Migrations
+namespace QMS_API.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210429125941_AddNewColounmToQuizAttempt")]
+    partial class AddNewColounmToQuizAttempt
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -492,9 +495,6 @@ namespace QMS__API.Data.Migrations
                     b.Property<string>("Enrollment")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("FinishDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<int?>("LinkId")
                         .HasColumnType("int");
 
@@ -506,9 +506,6 @@ namespace QMS__API.Data.Migrations
 
                     b.Property<decimal>("Score")
                         .HasColumnType("decimal(10, 2)");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 

@@ -3,7 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -52,7 +52,7 @@ namespace QMS_API.Controllers
             catch (Exception ex)
             {
 
-                throw ex;
+                return StatusCode(StatusCodes.Status500InternalServerError, ex);
             }
         }
 
@@ -66,10 +66,10 @@ namespace QMS_API.Controllers
             {
                 var tokenDescriptor = new SecurityTokenDescriptor
                 {
-                    Subject = new ClaimsIdentity(new Claim[]
+                    Subject = new ClaimsIdentity(new[]
                     {
-                        new Claim("UserID", user.Id.ToString()),
-                        new Claim("UserName", user.UserName.ToString())
+                        new Claim("UserID", user.Id),
+                        new Claim("UserName", user.UserName)
                     }),
 
                     Expires = DateTime.UtcNow.AddDays(5),

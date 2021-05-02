@@ -16,5 +16,6 @@ namespace QMS_API.Models
         public Test Test { get; set; }
         public string MatchingText { get; set; }
         public string Answer { get; set; }
+        public bool IsAnswerCorrect { get; set; }
     }
 }

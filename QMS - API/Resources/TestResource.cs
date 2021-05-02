@@ -17,5 +17,9 @@ namespace QMS_API.Resources
         public List<LinkResource> Links { get; set; }
         public IEnumerable<QuestionResource> QuestionsList { get; set; }
         public string User { get; set; }
+        public int NoOfStudents { get; set; }
+        public int NoOfQuestions { get; set; }
+        public decimal AverageMark { get; internal set; }
+        public string AverageDuration { get; set; }
     }
 }

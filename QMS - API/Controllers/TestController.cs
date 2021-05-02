@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using QMS_API.Data;
 using QMS_API.Models;
 using QMS_API.Resources;
+using QMS_API.Utils;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -34,7 +35,11 @@ namespace QMS_API.Controllers
         {
             var tests = await _context.Tests.Include(t => t.TestQuestions)
                 .ThenInclude(tq => tq.Question)
+                .ThenInclude(q => q.Answers)
                 .Include(t => t.Links)
+                .ThenInclude(l => l.QuizAttempts)
+                .ThenInclude(qa => qa.QuizAnswers)
+                .Include(t => t.CreatedBy)
                 .ToListAsync();
 
             var testResources = new List<TestResource>();
@@ -74,14 +79,59 @@ namespace QMS_API.Controllers
                 });
 
 
-                var testResource = new TestResource()
+                var testResource = new TestResource();
+
+                decimal totalScore = 0;
+                double totalDuration = 0;
+
+                var linkResources = new List<LinkResource>();
+
+                test.Links.ForEach(l =>
                 {
-                    Name = test.Name,
-                    Introduction = test.Introduction,
-                    User = test.CreatedBy.UserName,
-                    Questions = test.TestQuestions.Select(q => q.Question.Id).ToList(),
-                    QuestionsList = questionResources
-                };
+                    l.QuizAttempts.ForEach(qa =>
+                    {
+                        totalScore += qa.Score;
+                        totalDuration += (qa.FinishDate - qa.FinishDate).Ticks;
+                    });
+
+                    var linkResource = new LinkResource()
+                    {
+                        Id = l.Id,
+                        Name = l.Name
+                    };
+                    linkResources.Add(linkResource);
+
+                });
+
+                decimal average = 0;
+                double averageDuration = 0;
+
+                var totalQuizAttempts = test.Links.Sum(l => l.QuizAttempts.Count);
+                if (totalQuizAttempts > 0)
+                {
+                    average = totalScore / totalQuizAttempts;
+                    averageDuration = totalDuration / totalQuizAttempts;
+                }
+
+                var newAverage = new DateTime((long)averageDuration);
+                var dd = new Time()
+                {
+                    Hours = newAverage.Hour,
+                    Minutes = newAverage.Minute,
+                    Seconds = newAverage.Second,
+                }.ToString();
+
+                testResource.Id = test.Id;
+                testResource.Name = test.Name;
+                testResource.Introduction = test.Introduction;
+                testResource.User = test.CreatedBy.UserName;
+                testResource.Questions = test.TestQuestions.Select(q => q.Question.Id).ToList();
+                testResource.QuestionsList = questionResources;
+                testResource.NoOfStudents = test.Links.Sum(l => l.QuizAttempts.Count);
+                testResource.NoOfQuestions = test.TestQuestions.Count();
+                testResource.AverageMark = average;
+                testResource.AverageDuration = dd;
+                testResource.Links = linkResources;
 
                 testResources.Add(testResource);
             });
