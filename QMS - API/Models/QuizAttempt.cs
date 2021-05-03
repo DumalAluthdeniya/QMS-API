@@ -23,6 +23,7 @@ namespace QMS_API.Models
         public int CorrectQuestions { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime FinishDate { get; set; }
+        public bool Submitted { get; set; }
         public List<QuizAnswer> QuizAnswers { get; set; }
 
         public QuizAttempt()

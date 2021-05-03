@@ -52,6 +52,7 @@ namespace QMS_API.Controllers
                 {
                     Id = q.Id,
                     Title = q.Title,
+                    Topic = q.Topic,
                     QuestionType = q.QuestionType,
                     AnswerMaxLength = q.AnswerMaxLength,
                     DifficultyLevel = q.DifficultyLevel,
@@ -92,6 +93,7 @@ namespace QMS_API.Controllers
             var questionResource = new QuestionResource()
             {
                 Title = question.Title,
+                Topic = question.Topic,
                 QuestionType = question.QuestionType,
                 AnswerMaxLength = question.AnswerMaxLength,
                 DifficultyLevel = question.DifficultyLevel,
@@ -114,6 +116,7 @@ namespace QMS_API.Controllers
                 {
                     Title = question.Title,
                     Points = question.Points,
+                    Topic = question.Topic,
                     AnswerMaxLength = question.AnswerMaxLength,
                     DifficultyLevel = question.DifficultyLevel,
                     QuestionType = question.QuestionType,
@@ -167,6 +170,7 @@ namespace QMS_API.Controllers
                     _context.Answers.RemoveRange(currentQuestion.Answers);
 
                 currentQuestion.Title = question.Title;
+                currentQuestion.Topic = question.Topic;
                 currentQuestion.Points = question.Points;
                 currentQuestion.AnswerMaxLength = question.AnswerMaxLength;
                 currentQuestion.DifficultyLevel = question.DifficultyLevel;

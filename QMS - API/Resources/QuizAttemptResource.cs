@@ -21,6 +21,7 @@ namespace QMS_API.Resources
         public int CorrectQuestions { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime FinishDate { get; set; }
+        public bool Submitted { get; set; }
         public List<QuizAnswerResource> QuizAnswers { get; set; }
     }
 }

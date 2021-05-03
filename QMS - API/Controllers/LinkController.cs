@@ -67,6 +67,7 @@ namespace QMS_API.Controllers
                     {
                         Id = q.Id,
                         Title = q.Title,
+                        Topic = q.Topic,
                         QuestionType = q.QuestionType,
                         AnswerMaxLength = q.AnswerMaxLength,
                         DifficultyLevel = q.DifficultyLevel,
@@ -292,7 +293,8 @@ namespace QMS_API.Controllers
                     QuizAnswers = quizAnswers,
                     StartDate = qa.StartDate,
                     FinishDate = qa.FinishDate,
-                    CorrectQuestions = qa.CorrectQuestions
+                    CorrectQuestions = qa.CorrectQuestions,
+                    Submitted = qa.Submitted
 
                 };
 

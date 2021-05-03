@@ -21,7 +21,7 @@ namespace QMS_API.Models
         public int AnswerMaxLength { get; set; } 
         public bool IsDeleted { get; set; }
         public int Points { get; set; }
-        
+        public string Topic { get; set; }
         public DateTime CreatedTime { get; set; }
         public virtual List<Answer> Answers { get; set; }
         public virtual IEnumerable<TestQuestion> TestQuestions { get; set; }

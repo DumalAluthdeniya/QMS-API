@@ -14,6 +14,7 @@ namespace QMS_API.Resources
         [Required]
         public string Title { get; set; }
         public QuestionTypes QuestionType { get; set; }
+        public string Topic { get; set; }
         public DifficultyLevels DifficultyLevel { get; set; }
         public bool RandomizeAnswers { get; set; }
         public int AnswerMaxLength { get; set; }

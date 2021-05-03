@@ -190,6 +190,7 @@ namespace QMS_API.Controllers
                 var duration = submitResource.FinishTime - attempt.StartDate;
                 attempt.Duration = new Time()
                     {Hours = duration.Hours, Minutes = duration.Minutes, Seconds = duration.Seconds}.ToString();
+                attempt.Submitted = true;
                 await _context.SaveChangesAsync();
                 return Ok();
             }
