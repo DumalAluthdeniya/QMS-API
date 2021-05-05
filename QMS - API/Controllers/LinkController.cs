@@ -181,7 +181,9 @@ namespace QMS_API.Controllers
                 return NotFound("Invalid quiz.");
 
             var quizAnswers = link.QuizAttempts.FirstOrDefault(qa => qa.Email == email)?.QuizAnswers;
-            
+            //link.QuizAttempts = link.QuizAttempts.FindAll(qa => qa.Email == email);
+
+
             var questionResources = new List<QuestionResource>();
 
             var questions = link.Test.TestQuestions.Select(tq => tq.Question).ToList();
@@ -191,6 +193,12 @@ namespace QMS_API.Controllers
                 var givenAnswerId = -1;
 
                 var givenAnswersForCurrentQuestion = quizAnswers?.Where(qa => qa.Question.Id == q.Id && qa.Test.Id == link.Test.Id).ToList();
+                string duration = null;
+                if (givenAnswersForCurrentQuestion != null)
+                {
+                   
+                    duration = givenAnswersForCurrentQuestion.Find(a => !string.IsNullOrEmpty(a.Duration))?.Duration;
+                }
 
                 var answerResources = new List<AnswerResource>();
 
@@ -206,7 +214,9 @@ namespace QMS_API.Controllers
                             IsCorrectAnswer = a.IsCorrectAnswer,
                             Name = a.Name,
                             MatchingText = a.MatchingText,
-                            GivenMatchingText = givenAnswersForCurrentQuestion.Find(qa => qa.Answer == a.Name)?.MatchingText
+                            GivenMatchingText = givenAnswersForCurrentQuestion.Find(qa => qa.Answer == a.Name)?.MatchingText,
+                            
+
 
                         };
                         answerResources.Add(answerResource);
@@ -221,21 +231,22 @@ namespace QMS_API.Controllers
                                 IsCorrectAnswer = a.IsCorrectAnswer,
                                 Name = a.Name,
                                 MatchingText = a.MatchingText,
-                                GivenMatchingText = givenAnswersForCurrentQuestion.Find(qa => q.Id == a.Question.Id)?.MatchingText
-
+                                GivenMatchingText = givenAnswersForCurrentQuestion.Find(qa => q.Id == a.Question.Id)?.MatchingText,
+                               
                             };
                             answerResources.Add(answerResource);
                         }
                     }
                     else
                     {
-                       
+                        if (givenAnswersForCurrentQuestion == null) continue;
                         var answerResource = new AnswerResource()
                         {
                             Id = a.Id,
                             IsCorrectAnswer = a.IsCorrectAnswer,
                             Name = a.Name,
-                            MatchingText = a.MatchingText
+                            MatchingText = a.MatchingText,
+                            
 
                         };
                         answerResources.Add(answerResource);
@@ -253,7 +264,8 @@ namespace QMS_API.Controllers
                     Points = q.Points,
                     RandomizeAnswers = q.RandomizeAnswers,
                     Answers = answerResources,
-                    GivenAnswerId = givenAnswerId
+                    GivenAnswerId = givenAnswerId,
+                    Duration = duration
                 };
                 questionResources.Add(questionResource);
             }
@@ -274,7 +286,8 @@ namespace QMS_API.Controllers
                         QuizAttemptId = qan.QuizAttempt.Id,
                         TestId = qan.Id,
                         IsAnswerCorrect = qan.IsAnswerCorrect,
-                        MatchingText = qan.MatchingText
+                        MatchingText = qan.MatchingText,
+                        Duration = qan.Duration
                     };
 
                     quizAnswers.Add(quizAnswer);

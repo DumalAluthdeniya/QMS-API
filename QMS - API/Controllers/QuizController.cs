@@ -31,6 +31,8 @@ namespace QMS_API.Controllers
 
             if (currentAttempt != null)
             {
+                currentAttempt.StartDate = DateTime.Now;
+                 await _context.SaveChangesAsync();
                 return Ok(currentAttempt.Id);
             }
 
@@ -175,6 +177,28 @@ namespace QMS_API.Controllers
                 Console.WriteLine(e);
                 return BadRequest(e.Message);
             }
+        }
+
+
+        [HttpPost("duration")]
+
+        public async Task<IActionResult> AddQuizAnswerDuration([FromBody] QuizAnswerResource quizAnswer)
+        {
+            var answer = await _context.QuizAnswers
+                .Include(qa => qa.QuizAttempt)
+                .Include(qa => qa.Test)
+                .Include(qa => qa.Question)
+                .FirstOrDefaultAsync(q =>
+                    q.QuizAttempt.Id == quizAnswer.QuizAttemptId && q.Question.Id == quizAnswer.QuestionId &&
+                    q.Test.Id == quizAnswer.TestId);
+            if (answer == null)
+            {
+                return NotFound();
+            }
+
+            answer.Duration = quizAnswer.Duration;
+            await _context.SaveChangesAsync();
+            return Ok();
         }
 
         [HttpPost("submit")]

@@ -17,5 +17,6 @@ namespace QMS_API.Models
         public string MatchingText { get; set; }
         public string Answer { get; set; }
         public bool IsAnswerCorrect { get; set; }
+        public string Duration { get; set; }
     }
 }
