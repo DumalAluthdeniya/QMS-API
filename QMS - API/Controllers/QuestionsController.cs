@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using QMS_API.Data;
@@ -26,7 +27,7 @@ namespace QMS_API.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var questions = await _context.Questions.Include(c => c.Answers).ToListAsync();
+            var questions = await _context.Questions.Include(c => c.Answers).Where(q => !q.IsDeleted).ToListAsync();
 
 
             var questionResources = new List<QuestionResource>();
@@ -92,6 +93,7 @@ namespace QMS_API.Controllers
 
             var questionResource = new QuestionResource()
             {
+                Id = question.Id,
                 Title = question.Title,
                 Topic = question.Topic,
                 QuestionType = question.QuestionType,
