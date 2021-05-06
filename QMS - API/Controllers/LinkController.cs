@@ -175,6 +175,7 @@ namespace QMS_API.Controllers
          .Include(l => l.CreatedBy)
          .Include(l => l.QuizAttempts)
          .ThenInclude(qa => qa.QuizAnswers)
+         .ThenInclude(qa => qa.Question)
          .FirstOrDefaultAsync(l => l.Code == code);
 
             if (link == null)
@@ -350,6 +351,7 @@ namespace QMS_API.Controllers
                 .Include(l => l.CreatedBy)
                 .Include(l => l.QuizAttempts)
                 .ThenInclude(qa => qa.QuizAnswers)
+                .ThenInclude(a => a.Question)
                 .FirstOrDefaultAsync(l => l.Id == id);
 
 
@@ -404,7 +406,7 @@ namespace QMS_API.Controllers
                         QuizAttemptId = qan.QuizAttempt.Id,
                         TestId = qan.Id,
                         IsAnswerCorrect = qan.IsAnswerCorrect,
-                        MatchingText = qan.MatchingText
+                        MatchingText = qan.MatchingText ?? ""
                     };
 
                     quizAnswers.Add(quizAnswer);
