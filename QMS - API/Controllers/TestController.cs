@@ -40,6 +40,7 @@ namespace QMS_API.Controllers
                 .ThenInclude(l => l.QuizAttempts)
                 .ThenInclude(qa => qa.QuizAnswers)
                 .Include(t => t.CreatedBy)
+                .Where(t => !t.IsDeleted)
                 .ToListAsync();
 
             var testResources = new List<TestResource>();

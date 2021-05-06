@@ -15,6 +15,7 @@ namespace QMS_API.Resources
         public string Password { get; set; }
         public string User { get; set; }
         public int TestId { get; set; }
+        public int TotalQuestions { get; set; }
         public TestResource Test { get; set; }
         public List<QuizAttemptResource> QuizAttempts { get; set; }
     }

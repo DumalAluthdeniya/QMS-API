@@ -149,7 +149,7 @@ namespace QMS_API.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetByCode(Guid code)
         {
-            var link = await _context.Links.FirstOrDefaultAsync(l => l.Code == code);
+            var link = await _context.Links.Include(l => l.Test).ThenInclude(t => t.TestQuestions).FirstOrDefaultAsync(l => l.Code == code);
             var linkResource = new LinkResource()
             {
                 Id = link.Id,
@@ -158,6 +158,7 @@ namespace QMS_API.Controllers
                 Password = link.Password,
                 TimeLimit = link.TimeLimit,
                 Code = link.Code,
+                TotalQuestions = link.Test.TestQuestions.Count()
             };
             return Ok(linkResource);
         }
