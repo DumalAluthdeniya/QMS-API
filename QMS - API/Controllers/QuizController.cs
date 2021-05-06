@@ -78,11 +78,24 @@ namespace QMS_API.Controllers
                         a.Question == newAnswer.Question && a.Answer == newAnswer.Answer &&
                         a.QuizAttempt == newAnswer.QuizAttempt).FirstOrDefaultAsync();
 
+                    var hasAnsweredAll =
+                        newAnswer.QuizAttempt.QuizAnswers.FindAll(qa => qa.Question == newAnswer.Question).Count ==
+                        newAnswer.Question.Answers.Count;
+
                     var hasAnsweredBefore =
                         newAnswer.QuizAttempt.QuizAnswers.Any(qa => qa.Question == newAnswer.Question);
 
                     newAnswer.QuizAttempt.QuizAnswers?.FindAll(qa =>
                         !qa.IsAnswerCorrect && qa.Question == newAnswer.Question);
+
+                    var hasGivenCorrectAnswerBefore = false;
+
+                    if (hasAnsweredAll)
+                    {
+                        hasGivenCorrectAnswerBefore = newAnswer.QuizAttempt.QuizAnswers.FindAll(qa =>
+                            !qa.IsAnswerCorrect && qa.Question == newAnswer.Question &&
+                            qa.QuizAttempt == newAnswer.QuizAttempt).Count == 0;
+                    }
 
                     newAnswer.IsAnswerCorrect =
                         newAnswer.Question.Answers.Find(a => a.Name == newAnswer.Answer)?.MatchingText ==
@@ -96,21 +109,22 @@ namespace QMS_API.Controllers
                     else
                     {
                         await _context.QuizAnswers.AddAsync(newAnswer);
+                        hasAnsweredAll =
+                            newAnswer.QuizAttempt.QuizAnswers.FindAll(qa => qa.Question == newAnswer.Question).Count ==
+                            newAnswer.Question.Answers.Count;
                     }
-
-                    var hasAnsweredAll =
-                        newAnswer.QuizAttempt.QuizAnswers.FindAll(qa => qa.Question == newAnswer.Question).Count ==
-                        newAnswer.Question.Answers.Count;
 
 
                     var incorrectAnswerCountAfterUpdate = newAnswer.QuizAttempt.QuizAnswers.FindAll(qa =>
                         !qa.IsAnswerCorrect && qa.Question == newAnswer.Question &&
                         qa.QuizAttempt == newAnswer.QuizAttempt);
 
-                    if (incorrectAnswerCountAfterUpdate.Count > 0 && hasAnsweredBefore && hasAnsweredAll)
+                    if (incorrectAnswerCountAfterUpdate.Count > 0 && hasAnsweredBefore && hasAnsweredAll && hasGivenCorrectAnswerBefore)
                     {
-                        newAnswer.QuizAttempt.Score -= newAnswer.Question.Points;
-                        newAnswer.QuizAttempt.CorrectQuestions--;
+                       
+                            newAnswer.QuizAttempt.Score -= newAnswer.Question.Points;
+                            newAnswer.QuizAttempt.CorrectQuestions--;
+                        
                     }
                     else if (incorrectAnswerCountAfterUpdate.Count == 0 && hasAnsweredAll)
                     {
