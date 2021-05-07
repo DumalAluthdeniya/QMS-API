@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using QMS_API.Data;
 using QMS_API.Models;
@@ -17,17 +18,21 @@ namespace QMS_API.Controllers
     public class QuestionsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public QuestionsController(ApplicationDbContext context)
+        public QuestionsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: api/<QuestionsController>
-        [HttpGet]
-        public async Task<IActionResult> Get()
+        [HttpGet("all/{user}")]
+        public async Task<IActionResult> Get(string user)
         {
-            var questions = await _context.Questions.Include(c => c.Answers).Where(q => !q.IsDeleted).ToListAsync();
+            var loggedUser = await _userManager.FindByNameAsync(user);
+
+            var questions = await _context.Questions.Include(c => c.Answers).Where(q => !q.IsDeleted && q.CreatedBy == loggedUser).ToListAsync();
 
 
             var questionResources = new List<QuestionResource>();
@@ -63,7 +68,7 @@ namespace QMS_API.Controllers
                 };
                 questionResources.Add(questionResource);
             });
-           
+
             return Ok(questionResources);
 
         }
@@ -113,7 +118,6 @@ namespace QMS_API.Controllers
         {
             try
             {
-
                 var modelQuestion = new Question()
                 {
                     Title = question.Title,
@@ -122,8 +126,10 @@ namespace QMS_API.Controllers
                     AnswerMaxLength = question.AnswerMaxLength,
                     DifficultyLevel = question.DifficultyLevel,
                     QuestionType = question.QuestionType,
-                    RandomizeAnswers = question.RandomizeAnswers
+                    RandomizeAnswers = question.RandomizeAnswers,
+                    CreatedBy = await _userManager.FindByNameAsync(question.User)
                 };
+
 
 
                 var modelAnswers = new List<Answer>();
@@ -166,7 +172,7 @@ namespace QMS_API.Controllers
                 if (currentQuestion == null)
                     return NotFound("Could not found an Question with this ID");
 
-               
+
 
                 if (currentQuestion.Answers != null)
                     _context.Answers.RemoveRange(currentQuestion.Answers);

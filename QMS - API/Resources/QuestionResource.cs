@@ -22,5 +22,6 @@ namespace QMS_API.Resources
         public int GivenAnswerId { get; set; }
         public List<AnswerResource> Answers { get; set; }
         public string Duration { get; set; }
+        public string User { get; set; }
     }
 }
