@@ -30,9 +30,12 @@ namespace QMS_API.Controllers
         }
 
         // GET: api/<TestController>
-        [HttpGet]
-        public async Task<IActionResult> Get()
+        [HttpGet("all/{user}")]
+        public async Task<IActionResult> Get(string user)
         {
+
+            var loggedUser = await _userManager.FindByNameAsync(user);
+
             var tests = await _context.Tests.Include(t => t.TestQuestions)
                 .ThenInclude(tq => tq.Question)
                 .ThenInclude(q => q.Answers)
@@ -40,8 +43,10 @@ namespace QMS_API.Controllers
                 .ThenInclude(l => l.QuizAttempts)
                 .ThenInclude(qa => qa.QuizAnswers)
                 .Include(t => t.CreatedBy)
-                .Where(t => !t.IsDeleted)
+                .Where(t => !t.IsDeleted && t.CreatedBy == loggedUser)
                 .ToListAsync();
+
+
 
             var testResources = new List<TestResource>();
 
