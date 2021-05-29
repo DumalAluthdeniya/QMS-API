@@ -264,6 +264,7 @@ namespace QMS_API.Controllers
                     AnswerMaxLength = q.AnswerMaxLength,
                     DifficultyLevel = q.DifficultyLevel,
                     Points = q.Points,
+                    //Score = GetScore(q, link.QuizAttempts),
                     RandomizeAnswers = q.RandomizeAnswers,
                     Answers = answerResources,
                     GivenAnswerId = givenAnswerId,
@@ -338,6 +339,8 @@ namespace QMS_API.Controllers
             return Ok(linkResource);
 
         }
+
+        
 
         // GET api/<QuestionsController>/5
         [HttpGet("{id}")]

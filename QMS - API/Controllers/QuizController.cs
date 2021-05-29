@@ -32,7 +32,7 @@ namespace QMS_API.Controllers
             if (currentAttempt != null)
             {
                 currentAttempt.StartDate = DateTime.Now;
-                 await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
                 return Ok(currentAttempt.Id);
             }
 
@@ -62,7 +62,7 @@ namespace QMS_API.Controllers
                 {
                     QuizAttempt = await _context.QuizAttempts.Include(qa => qa.QuizAnswers)
                         .FirstOrDefaultAsync(l => l.Id == quizAnswer.QuizAttemptId),
-                    Test = await _context.Tests.Include(t => t.TestQuestions)
+                    Test = await _context.Tests.Include(t => t.TestQuestions).ThenInclude(tq => tq.Question)
                         .FirstOrDefaultAsync(l => l.Id == quizAnswer.TestId),
                     Question = await _context.Questions.Include(q => q.Answers)
                         .FirstOrDefaultAsync(l => l.Id == quizAnswer.QuestionId),
@@ -73,10 +73,26 @@ namespace QMS_API.Controllers
 
                 if (newAnswer.Question.QuestionType.Equals(QuestionTypes.Matching))
                 {
+
+
+
                     var existingAnswer = await _context.QuizAnswers.Where(a =>
                         a.QuizAttempt == newAnswer.QuizAttempt && a.Test == newAnswer.Test &&
                         a.Question == newAnswer.Question && a.Answer == newAnswer.Answer &&
                         a.QuizAttempt == newAnswer.QuizAttempt).FirstOrDefaultAsync();
+
+                    var correctAnswerCountBeforeUpdate = newAnswer.QuizAttempt.QuizAnswers.FindAll(qa =>
+                        qa.IsAnswerCorrect && qa.Question == newAnswer.Question &&
+                        qa.QuizAttempt == newAnswer.QuizAttempt);
+
+                    if (correctAnswerCountBeforeUpdate.Count > 0)
+                    {
+                        var correctAnswers = correctAnswerCountBeforeUpdate.Count;
+                        var totalAnswers = newAnswer.QuizAttempt.QuizAnswers.FindAll(q => q.Question == newAnswer.Question).Count;
+                        decimal score = (decimal)correctAnswers / totalAnswers;
+                        score *= newAnswer.Question.Points;
+                        newAnswer.QuizAttempt.Score -= score;
+                    }
 
                     var hasAnsweredAll =
                         newAnswer.QuizAttempt.QuizAnswers.FindAll(qa => qa.Question == newAnswer.Question).Count ==
@@ -115,27 +131,33 @@ namespace QMS_API.Controllers
                     }
 
 
-                    var incorrectAnswerCountAfterUpdate = newAnswer.QuizAttempt.QuizAnswers.FindAll(qa =>
-                        !qa.IsAnswerCorrect && qa.Question == newAnswer.Question &&
+                    var correctAnswerCountAfterUpdate = newAnswer.QuizAttempt.QuizAnswers.FindAll(qa =>
+                        qa.IsAnswerCorrect && qa.Question == newAnswer.Question &&
                         qa.QuizAttempt == newAnswer.QuizAttempt);
 
-                    if (incorrectAnswerCountAfterUpdate.Count > 0 && hasAnsweredBefore && hasAnsweredAll && hasGivenCorrectAnswerBefore)
+                    if (correctAnswerCountAfterUpdate.Count > 0)
                     {
-                       
-                            newAnswer.QuizAttempt.Score -= newAnswer.Question.Points;
-                            newAnswer.QuizAttempt.CorrectQuestions--;
-                        
+
+                        var correctAnswers = correctAnswerCountAfterUpdate.Count;
+                        var totalAnswers = newAnswer.QuizAttempt.QuizAnswers.FindAll(q => q.Question == newAnswer.Question).Count;
+                        decimal score = (decimal)correctAnswers / totalAnswers;
+                        score *= newAnswer.Question.Points;
+                        newAnswer.QuizAttempt.Score += score;
+                        if (correctAnswerCountBeforeUpdate.Count == 0)
+                            newAnswer.QuizAttempt.CorrectQuestions++;
+
                     }
-                    else if (incorrectAnswerCountAfterUpdate.Count == 0 && hasAnsweredAll)
+                    else if (hasAnsweredAll && correctAnswerCountAfterUpdate.Count == 0)
                     {
-                        newAnswer.QuizAttempt.Score += newAnswer.Question.Points;
-                        newAnswer.QuizAttempt.CorrectQuestions++;
+
+                        newAnswer.QuizAttempt.CorrectQuestions--;
                     }
 
 
                     //calculate percentage
-                    newAnswer.QuizAttempt.Percentage = (int) (0.5f + ((100f * newAnswer.QuizAttempt.CorrectQuestions) /
-                                                                      newAnswer.Test.TestQuestions.Count()));
+                    var totalPoints = newAnswer.Test.TestQuestions.Sum(q => q.Question.Points);
+                    var questionscore = newAnswer.QuizAttempt.Score;
+                    newAnswer.QuizAttempt.Percentage = (int)(questionscore * 100 / (decimal)totalPoints);
 
                     await _context.SaveChangesAsync();
 
@@ -177,8 +199,10 @@ namespace QMS_API.Controllers
 
 
                     //calculate percentage
-                    newAnswer.QuizAttempt.Percentage = (int) (0.5f + ((100f * newAnswer.QuizAttempt.CorrectQuestions) /
-                                                                      newAnswer.Test.TestQuestions.Count()));
+                    //calculate percentage
+                    var totalPoints = newAnswer.Test.TestQuestions.Sum(q => q.Question.Points);
+                    var questionscore = newAnswer.QuizAttempt.Score;
+                    newAnswer.QuizAttempt.Percentage = (int)(questionscore * 100 / (decimal)totalPoints);
 
                     await _context.SaveChangesAsync();
 
@@ -221,21 +245,72 @@ namespace QMS_API.Controllers
             try
             {
                 var attempt =
-                    await _context.QuizAttempts.FirstOrDefaultAsync(qa => qa.Id == submitResource.QuizAttemptId);
+                    await _context.QuizAttempts
+                    .Include(qq => qq.Link)
+                    .ThenInclude(l => l.Test)
+                    .ThenInclude(l => l.TestQuestions)
+                    .ThenInclude(ll => ll.Question)
+                    .ThenInclude(a => a.Answers)
+                    .Include(qa => qa.QuizAnswers)
+                    .ThenInclude(a => a.Question)
+                    .FirstOrDefaultAsync(qa => qa.Id == submitResource.QuizAttemptId);
                 if (attempt == null)
                     return NotFound();
                 attempt.FinishDate = submitResource.FinishTime;
                 var duration = submitResource.FinishTime - attempt.StartDate;
                 attempt.Duration = new Time()
-                    {Hours = duration.Hours, Minutes = duration.Minutes, Seconds = duration.Seconds}.ToString();
+                { Hours = duration.Hours, Minutes = duration.Minutes, Seconds = duration.Seconds }.ToString();
                 attempt.Submitted = true;
-                await _context.SaveChangesAsync();
-                return Ok();
+                //await _context.SaveChangesAsync();
+
+                var summery = new ResultsSummery() { SummeryTexts = new System.Collections.Generic.List<string>() };
+
+                summery.TotalQuestions = attempt.Link.Test.TestQuestions.Count();
+                summery.TotalMark = attempt.Link.Test.TestQuestions.Sum(q => q.Question.Points);
+                summery.MarksObtained = attempt.Score;
+                summery.CorrectAnswers = attempt.CorrectQuestions;
+                summery.IncorrectAnswers = attempt.Link.Test.TestQuestions.Count() - attempt.CorrectQuestions;
+
+                int index = 1;
+                foreach (var q in attempt.Link.Test.TestQuestions)
+                {
+
+                    string text = string.Format("Question {0} : {1} out of {2}", index, GetScore(q.Question, attempt).ToString(), q.Question.Points);
+                    summery.SummeryTexts.Add(text);
+                    index++;
+                }
+
+
+
+                return Ok(summery);
             }
             catch (Exception e)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,e);
+                return StatusCode(StatusCodes.Status500InternalServerError, e);
             }
+        }
+
+        private decimal GetScore(Question q, QuizAttempt qa)
+        {
+            if (q.QuestionType == Enums.Enums.QuestionTypes.Matching)
+            {
+                var correctAnswers = qa.QuizAnswers.FindAll(qa =>
+                        qa.IsAnswerCorrect && qa.Question == q).Count;
+
+                var totalAnswers = q.Answers.Count();
+                decimal score = (decimal)correctAnswers / totalAnswers;
+                return score *= q.Points;
+            }
+            else
+            {
+                var correctAnswers = qa.QuizAnswers.FindAll(qa =>
+                       qa.IsAnswerCorrect && qa.Question == q).Count;
+                if (correctAnswers > 0)
+                    return q.Points;
+
+                return 0;
+            }
+
         }
     }
 }

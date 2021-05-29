@@ -19,6 +19,7 @@ namespace QMS_API.Resources
         public bool RandomizeAnswers { get; set; }
         public int AnswerMaxLength { get; set; }
         public int Points { get; set; }
+        public decimal Score { get; set; }
         public int GivenAnswerId { get; set; }
         public List<AnswerResource> Answers { get; set; }
         public string Duration { get; set; }
