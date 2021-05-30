@@ -256,12 +256,12 @@ namespace QMS_API.Controllers
                     .FirstOrDefaultAsync(qa => qa.Id == submitResource.QuizAttemptId);
                 if (attempt == null)
                     return NotFound();
-                attempt.FinishDate = submitResource.FinishTime;
-                var duration = submitResource.FinishTime - attempt.StartDate;
+                attempt.FinishDate = DateTime.Now;
+                var duration = DateTime.Now - attempt.StartDate;
                 attempt.Duration = new Time()
                 { Hours = duration.Hours, Minutes = duration.Minutes, Seconds = duration.Seconds }.ToString();
                 attempt.Submitted = true;
-                //await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
 
                 var summery = new ResultsSummery() { SummeryTexts = new System.Collections.Generic.List<string>() };
 
@@ -270,14 +270,17 @@ namespace QMS_API.Controllers
                 summery.MarksObtained = attempt.Score;
                 summery.CorrectAnswers = attempt.CorrectQuestions;
                 summery.IncorrectAnswers = attempt.Link.Test.TestQuestions.Count() - attempt.CorrectQuestions;
+                summery.Duration = attempt.Duration;
+                summery.StartTime = attempt.StartDate;
+                summery.FinishedTime = attempt.FinishDate;
 
-                int index = 1;
+             
                 foreach (var q in attempt.Link.Test.TestQuestions)
                 {
 
-                    string text = string.Format("Question {0} : {1} out of {2}", index, GetScore(q.Question, attempt).ToString(), q.Question.Points);
+                    string text = string.Format("{0} ({1}): {2} out of {3}", q.Question.Title,q.Question.QuestionType, GetScore(q.Question, attempt).ToString(), q.Question.Points);
                     summery.SummeryTexts.Add(text);
-                    index++;
+                  
                 }
 
 

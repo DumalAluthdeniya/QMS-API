@@ -13,5 +13,8 @@ namespace QMS_API.Resources
         public int CorrectAnswers { get; set; }
         public int IncorrectAnswers { get; set; }
         public List<string> SummeryTexts { get; set; }
+        public string Duration { get; internal set; }
+        public DateTime StartTime { get; internal set; }
+        public DateTime FinishedTime { get; internal set; }
     }
 }
