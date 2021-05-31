@@ -183,6 +183,7 @@ namespace QMS_API.Controllers
                 return NotFound("Invalid quiz.");
 
             var quizAnswers = link.QuizAttempts.FirstOrDefault(qa => qa.Email == email)?.QuizAnswers;
+            var quizAttempt = link.QuizAttempts.FirstOrDefault(qa => qa.Email == email);
             //link.QuizAttempts = link.QuizAttempts.FindAll(qa => qa.Email == email);
 
 
@@ -196,10 +197,12 @@ namespace QMS_API.Controllers
 
                 var givenAnswersForCurrentQuestion = quizAnswers?.Where(qa => qa.Question.Id == q.Id && qa.Test.Id == link.Test.Id).ToList();
                 string duration = null;
+                decimal score = 0;
                 if (givenAnswersForCurrentQuestion != null)
                 {
                    
                     duration = givenAnswersForCurrentQuestion.Find(a => !string.IsNullOrEmpty(a.Duration))?.Duration;
+                    score = GetScore(q, quizAttempt);
                 }
 
                 var answerResources = new List<AnswerResource>();
@@ -264,7 +267,7 @@ namespace QMS_API.Controllers
                     AnswerMaxLength = q.AnswerMaxLength,
                     DifficultyLevel = q.DifficultyLevel,
                     Points = q.Points,
-                    //Score = GetScore(q, link.QuizAttempts),
+                    Score = score,
                     RandomizeAnswers = q.RandomizeAnswers,
                     Answers = answerResources,
                     GivenAnswerId = givenAnswerId,
@@ -340,7 +343,28 @@ namespace QMS_API.Controllers
 
         }
 
-        
+        private decimal GetScore(Question q, QuizAttempt qa)
+        {
+            if (q.QuestionType == Enums.Enums.QuestionTypes.Matching)
+            {
+                var correctAnswers = qa.QuizAnswers.FindAll(qa =>
+                        qa.IsAnswerCorrect && qa.Question == q).Count;
+
+                var totalAnswers = q.Answers.Count();
+                decimal score = (decimal)correctAnswers / totalAnswers;
+                return score *= q.Points;
+            }
+            else
+            {
+                var correctAnswers = qa.QuizAnswers.FindAll(qa =>
+                       qa.IsAnswerCorrect && qa.Question == q).Count;
+                if (correctAnswers > 0)
+                    return q.Points;
+
+                return 0;
+            }
+
+        }
 
         // GET api/<QuestionsController>/5
         [HttpGet("{id}")]

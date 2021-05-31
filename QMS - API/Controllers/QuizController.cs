@@ -143,11 +143,11 @@ namespace QMS_API.Controllers
                         decimal score = (decimal)correctAnswers / totalAnswers;
                         score *= newAnswer.Question.Points;
                         newAnswer.QuizAttempt.Score += score;
-                        if (correctAnswerCountBeforeUpdate.Count == 0)
+                        if (correctAnswerCountAfterUpdate.Count == totalAnswers)
                             newAnswer.QuizAttempt.CorrectQuestions++;
 
                     }
-                    else if (hasAnsweredAll && correctAnswerCountAfterUpdate.Count == 0)
+                    else if (hasAnsweredAll && correctAnswerCountAfterUpdate.Count == 0 && correctAnswerCountBeforeUpdate.Count > 0)
                     {
 
                         newAnswer.QuizAttempt.CorrectQuestions--;
