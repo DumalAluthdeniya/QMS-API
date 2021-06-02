@@ -2,10 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 using QMS_API.Data;
 using QMS_API.Models;
 using QMS_API.Resources;
@@ -354,6 +356,39 @@ namespace QMS_API.Controllers
                 decimal score = (decimal)correctAnswers / totalAnswers;
                 return score *= q.Points;
             }
+            else if (q.QuestionType == Enums.Enums.QuestionTypes.FreeText)
+            {
+                var givenAnswer = qa.QuizAnswers.Find(qan => qan.Question == q);
+                decimal score = 0;
+                if (givenAnswer != null)
+                {
+                    var url = string.Format("http://tidal-geode-315120.et.r.appspot.com/send_message/{0}/{1}", givenAnswer.Answer,
+                        givenAnswer.MatchingText);
+                    using (var client = new HttpClient())
+                    {
+                        var response = client.GetAsync(url).Result;
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var responseContent = response.Content;
+
+                            // by calling .Result you are synchronously reading the result
+                            string responseString = responseContent.ReadAsStringAsync().Result;
+
+                            var details = JObject.Parse(responseString);
+                            var similarity = (decimal)details["Similarity"];
+
+                            qa.Score -= q.Points;
+                            score = (decimal)similarity * q.Points;
+                            qa.Score += score;
+
+
+                        }
+                    }
+                }
+
+                return score;
+            }
             else
             {
                 var correctAnswers = qa.QuizAnswers.FindAll(qa =>
@@ -520,7 +555,7 @@ namespace QMS_API.Controllers
         }
 
         // PUT api/<QuestionsController>/5
-        [HttpPut("{id}")]
+        [HttpPost("{id}")]
         public async Task<IActionResult> Put(int id, [FromBody] LinkResource link)
         {
             try
@@ -547,7 +582,7 @@ namespace QMS_API.Controllers
         }
 
         // DELETE api/<QuestionsController>/5
-        [HttpDelete("{id}")]
+        [HttpPost("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             try

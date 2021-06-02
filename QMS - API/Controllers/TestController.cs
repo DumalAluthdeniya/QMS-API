@@ -261,7 +261,7 @@ namespace QMS_API.Controllers
         }
 
         // PUT api/<TestController>/5
-        [HttpPut("{id}")]
+        [HttpPost("{id}")]
         public async Task<IActionResult> Put(int id, [FromBody] TestResource testResource)
         {
             try
@@ -307,7 +307,7 @@ namespace QMS_API.Controllers
         }
 
         // DELETE api/<TestController>/5
-        [HttpDelete("{id}")]
+        [HttpPost("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var test = await _context.Tests.FirstOrDefaultAsync(t => t.Id == id);

@@ -1,9 +1,12 @@
 ﻿using System;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using QMS_API.Data;
 using QMS_API.Models;
 using QMS_API.Resources;
@@ -88,7 +91,7 @@ namespace QMS_API.Controllers
                     if (correctAnswerCountBeforeUpdate.Count > 0)
                     {
                         var correctAnswers = correctAnswerCountBeforeUpdate.Count;
-                        var totalAnswers = newAnswer.QuizAttempt.QuizAnswers.FindAll(q => q.Question == newAnswer.Question).Count;
+                        var totalAnswers = newAnswer.Question.Answers.Count;
                         decimal score = (decimal)correctAnswers / totalAnswers;
                         score *= newAnswer.Question.Points;
                         newAnswer.QuizAttempt.Score -= score;
@@ -139,9 +142,9 @@ namespace QMS_API.Controllers
                     {
 
                         var correctAnswers = correctAnswerCountAfterUpdate.Count;
-                        var totalAnswers = newAnswer.QuizAttempt.QuizAnswers.FindAll(q => q.Question == newAnswer.Question).Count;
+                        var totalAnswers = newAnswer.Question.Answers.Count;
                         decimal score = (decimal)correctAnswers / totalAnswers;
-                        score *= newAnswer.Question.Points;
+                        score = score * newAnswer.Question.Points;
                         newAnswer.QuizAttempt.Score += score;
                         if (correctAnswerCountAfterUpdate.Count == totalAnswers)
                             newAnswer.QuizAttempt.CorrectQuestions++;
@@ -261,29 +264,29 @@ namespace QMS_API.Controllers
                 attempt.Duration = new Time()
                 { Hours = duration.Hours, Minutes = duration.Minutes, Seconds = duration.Seconds }.ToString();
                 attempt.Submitted = true;
-                await _context.SaveChangesAsync();
+
 
                 var summery = new ResultsSummery() { SummeryTexts = new System.Collections.Generic.List<string>() };
 
                 summery.TotalQuestions = attempt.Link.Test.TestQuestions.Count();
                 summery.TotalMark = attempt.Link.Test.TestQuestions.Sum(q => q.Question.Points);
-                summery.MarksObtained = attempt.Score;
                 summery.CorrectAnswers = attempt.CorrectQuestions;
                 summery.IncorrectAnswers = attempt.Link.Test.TestQuestions.Count() - attempt.CorrectQuestions;
                 summery.Duration = attempt.Duration;
                 summery.StartTime = attempt.StartDate;
                 summery.FinishedTime = attempt.FinishDate;
 
-             
+
                 foreach (var q in attempt.Link.Test.TestQuestions)
                 {
 
-                    string text = string.Format("{0} ({1}): {2} out of {3}", q.Question.Title,q.Question.QuestionType, GetScore(q.Question, attempt).ToString(), q.Question.Points);
+                    string text = string.Format("{0} ({1}): {2} out of {3}", q.Question.Title, q.Question.QuestionType, GetScoreAsync(q.Question, attempt).ToString(), q.Question.Points);
                     summery.SummeryTexts.Add(text);
-                  
+
                 }
 
-
+                summery.MarksObtained = attempt.Score;
+                await _context.SaveChangesAsync();
 
                 return Ok(summery);
             }
@@ -293,7 +296,7 @@ namespace QMS_API.Controllers
             }
         }
 
-        private decimal GetScore(Question q, QuizAttempt qa)
+        private decimal GetScoreAsync(Question q, QuizAttempt qa)
         {
             if (q.QuestionType == Enums.Enums.QuestionTypes.Matching)
             {
@@ -303,6 +306,44 @@ namespace QMS_API.Controllers
                 var totalAnswers = q.Answers.Count();
                 decimal score = (decimal)correctAnswers / totalAnswers;
                 return score *= q.Points;
+            }
+            else if (q.QuestionType == Enums.Enums.QuestionTypes.FreeText)
+            {
+                var givenAnswer = qa.QuizAnswers.Find(qan => qan.Question == q);
+                decimal score = 0;
+                if (givenAnswer != null)
+                {
+                    var url = string.Format("http://tidal-geode-315120.et.r.appspot.com/send_message/{0}/{1}", givenAnswer.Answer,
+                        givenAnswer.MatchingText);
+                    //var response = client.GetAsync(url).GetAwaiter().GetResult();
+
+                    using (var client = new HttpClient())
+                    {
+                        var response = client.GetAsync(url).Result;
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var responseContent = response.Content;
+
+                            // by calling .Result you are synchronously reading the result
+                            string responseString = responseContent.ReadAsStringAsync().Result;
+
+                            var details = JObject.Parse(responseString);
+                            var similarity = (decimal)details["Similarity"];
+
+                            qa.Score -= q.Points;
+                            score = (decimal)similarity * q.Points;
+                            qa.Score += score;
+
+                            
+                        }
+                    }
+
+                  
+                }
+
+                return score;
+
             }
             else
             {

@@ -163,7 +163,7 @@ namespace QMS_API.Controllers
         }
 
         // PUT api/<QuestionsController>/5
-        [HttpPut("{id}")]
+        [HttpPost("{id}")]
         public async Task<IActionResult> Put(int id, [FromBody] QuestionResource question)
         {
             try
@@ -217,7 +217,7 @@ namespace QMS_API.Controllers
         }
 
         // DELETE api/<QuestionsController>/5
-        [HttpDelete("{id}")]
+        [HttpPost("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             try
