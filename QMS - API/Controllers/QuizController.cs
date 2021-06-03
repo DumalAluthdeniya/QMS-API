@@ -189,12 +189,12 @@ namespace QMS_API.Controllers
                     var correctAnswerCountAfterUpdate = newAnswer.QuizAttempt.QuizAnswers.FindAll(qa =>
                         qa.IsAnswerCorrect && qa.Question == newAnswer.Question &&
                         qa.QuizAttempt == newAnswer.QuizAttempt);
-                    if (correctAnswerCountBeforeUpdate.Count > 0)
+                    if (correctAnswerCountBeforeUpdate.Count > 0 && !newAnswer.Question.QuestionType.Equals(QuestionTypes.FreeText))
                     {
                         newAnswer.QuizAttempt.Score -= newAnswer.Question.Points;
                         newAnswer.QuizAttempt.CorrectQuestions--;
                     }
-                    else if (correctAnswerCountAfterUpdate.Count > 0)
+                    else if (correctAnswerCountAfterUpdate.Count > 0 && !newAnswer.Question.QuestionType.Equals(QuestionTypes.FreeText))
                     {
                         newAnswer.QuizAttempt.Score += newAnswer.Question.Points;
                         newAnswer.QuizAttempt.CorrectQuestions++;
@@ -270,8 +270,7 @@ namespace QMS_API.Controllers
 
                 summery.TotalQuestions = attempt.Link.Test.TestQuestions.Count();
                 summery.TotalMark = attempt.Link.Test.TestQuestions.Sum(q => q.Question.Points);
-                summery.CorrectAnswers = attempt.CorrectQuestions;
-                summery.IncorrectAnswers = attempt.Link.Test.TestQuestions.Count() - attempt.CorrectQuestions;
+               
                 summery.Duration = attempt.Duration;
                 summery.StartTime = attempt.StartDate;
                 summery.FinishedTime = attempt.FinishDate;
@@ -285,6 +284,8 @@ namespace QMS_API.Controllers
 
                 }
 
+                summery.CorrectAnswers = attempt.CorrectQuestions;
+                summery.IncorrectAnswers = attempt.Link.Test.TestQuestions.Count() - attempt.CorrectQuestions;
                 summery.MarksObtained = attempt.Score;
                 await _context.SaveChangesAsync();
 
@@ -331,11 +332,12 @@ namespace QMS_API.Controllers
                             var details = JObject.Parse(responseString);
                             var similarity = (decimal)details["Similarity"];
 
-                            qa.Score -= q.Points;
-                            score = (decimal)similarity * q.Points;
+                            if (similarity >= (decimal)0.5)
+                            {
+                                qa.CorrectQuestions++;
+                            }
+                            score = similarity * q.Points;
                             qa.Score += score;
-
-                            
                         }
                     }
 
