@@ -335,6 +335,11 @@ namespace QMS_API.Controllers
                             if (similarity >= (decimal)0.5)
                             {
                                 qa.CorrectQuestions++;
+                                qa.QuizAnswers.Find(qq => qq.Question.Id == q.Id).IsAnswerCorrect = true;
+                            }
+                            else
+                            {
+                                qa.QuizAnswers.Find(qq => qq.Question.Id == q.Id).IsAnswerCorrect = false;
                             }
                             score = similarity * q.Points;
                             qa.Score += score;
